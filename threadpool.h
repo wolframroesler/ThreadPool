@@ -38,7 +38,7 @@
  */
 class ThreadPool {
 public:
-    ThreadPool(size_t);
+    ThreadPool(size_t threads = std::thread::hardware_concurrency());
     template<class F, class... Args>
     auto operator()(F&& f, Args&&... args) 
         -> std::future<typename std::result_of<F(Args...)>::type>;
@@ -59,7 +59,7 @@ private:
  
 // the constructor just launches some amount of workers
 inline ThreadPool::ThreadPool(size_t threads) {
-    for(size_t i=0;i<threads;++i) {
+    for(size_t i=0;i<std::max(1UL,threads);++i) {
         workers.emplace_back(
             [this] {
                 for(;;) {
