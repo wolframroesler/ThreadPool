@@ -9,6 +9,7 @@
 #include <string>
 #include <thread>
 #include <unistd.h>
+#include <vector>
 
 /**
  * Write msg to cout in a thread-safe way.
@@ -49,17 +50,37 @@ void Demo1() {
 }
 
 /**
+ * Demonstration 2: Start several threads and wait for all of them
+ */
+void Demo2() {
+
+	// Start a number of threads
+	std::vector<std::thread> v;
+	for(auto i=0,sec=1;i<3;++i,sec*=2) {
+		v.emplace_back(DoSomething,sec);
+	}
+
+	// Wait for all threads to finish
+	for(auto &t : v) {
+		t.join();
+	}
+}
+
+/**
  * Program starts here
  */
 int main(int argc,char** argv) {
 	switch(argc==2 ? atoi(argv[1]) : -1) {
+
 		case 1: Demo1(); break;
+		case 2: Demo2(); break;
 
 		default:
 		  std::cout
 			<< "C++11 multithreading demonstration program\n"
 			<< "Usage:\n"
 			<< "\t" << argv[0] << " 1\tSimple std::thread example\n"
+			<< "\t" << argv[0] << " 2\tStart several threads and wait for all of them\n"
 			;
 		  return EXIT_FAILURE;
 	}
