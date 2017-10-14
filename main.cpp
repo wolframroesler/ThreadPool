@@ -12,6 +12,8 @@
 #include <unistd.h>
 #include <vector>
 
+#include "threadpool.h"
+
 /**
  * Write msg to cout in a thread-safe way.
  *
@@ -129,6 +131,25 @@ void Demo6() {
 }
 
 /**
+ * Demonstration 7: Simple thread pool example
+ */
+void Demo7() {
+
+	// Create a thread pool
+	ThreadPool p;
+
+	// Start a task in the pool
+	auto f = p(DoSomething,2);
+
+	// Do something else while the background task is running
+	DoSomething(1);
+
+	// Wait for the task to finish and show its result
+	const auto result = f.get();
+	Say("The result is " + std::to_string(result));
+}
+
+/**
  * Program starts here
  */
 int main(int argc,char** argv) {
@@ -140,6 +161,7 @@ int main(int argc,char** argv) {
 		case 4: Demo45(false);	break;
 		case 5: Demo45(true);	break;
 		case 6: Demo6();		break;
+		case 7: Demo7();		break;
 
 		default:
 			std::cout
@@ -151,6 +173,7 @@ int main(int argc,char** argv) {
 				<< "\t" << argv[0] << " 4\tStart async task with the async policy\n"
 				<< "\t" << argv[0] << " 5\tStart async task with the deferred policy\n"
 				<< "\t" << argv[0] << " 6\tStart several async tasks and get their results\n"
+				<< "\t" << argv[0] << " 7\tSimple thread pool example\n"
 				;
 			return EXIT_FAILURE;
 	}
