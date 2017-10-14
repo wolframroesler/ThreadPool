@@ -36,7 +36,7 @@ void Say(const std::string& msg) {
 int DoSomething(int sec) {
 	Say("Sleeping for " + std::to_string(sec) + " s ...");
 	sleep(sec);
-	Say("Slept for " + std::to_string(sec) + " s");
+	Say("Slept for " + std::to_string(sec) + " s.");
 
 	return sec;
 }
@@ -86,7 +86,7 @@ void Demo3() {
 
 	// Wait for the background task to finish and show its result
 	const auto result = f.get();
-	Say("The result is " + std::to_string(result));
+	Say("The result is " + std::to_string(result) + ".");
 }
 
 /**
@@ -106,7 +106,7 @@ void Demo45(bool defer) {
 
 	// Wait for the background task to finish and show its result
 	const auto result = f.get();
-	Say("The result is " + std::to_string(result));
+	Say("The result is " + std::to_string(result) + ".");
 }
 
 /**
@@ -125,9 +125,8 @@ void Demo6() {
 	// Wait for all tasks to finish, and show their results
 	for(auto& f : v) {
 	  const auto result = f.get();
-	  Say("The result is " + std::to_string(result));
+	  Say("The result is " + std::to_string(result) + ".");
 	}
-
 }
 
 /**
@@ -146,7 +145,32 @@ void Demo7() {
 
 	// Wait for the task to finish and show its result
 	const auto result = f.get();
-	Say("The result is " + std::to_string(result));
+	Say("The result is " + std::to_string(result) + ".");
+}
+
+/**
+ * Demonstrations 8 and 9: Start several tasks with a thread pool
+ *
+ * @param toosmall If true, make the pool smaller than the number of tasks
+ */
+void Demo89(bool toosmall) {
+
+	// Create a pool with either enough or too few parallel threads
+	ThreadPool p(toosmall ? 2 : 4);
+
+	// Start a number of tasks in the pool
+	std::vector<std::future<int>> v;
+	for(auto i=0,sec=1;i<3;++i,sec*=2) {
+		v.push_back(
+			p(DoSomething,sec)
+		);
+	}
+
+	// Wait for all tasks to finish, and show their results
+	for(auto& f : v) {
+	  const auto result = f.get();
+	  Say("The result is " + std::to_string(result) + ".");
+	}
 }
 
 /**
@@ -162,6 +186,8 @@ int main(int argc,char** argv) {
 		case 5: Demo45(true);	break;
 		case 6: Demo6();		break;
 		case 7: Demo7();		break;
+		case 8: Demo89(false);	break;
+		case 9: Demo89(true);	break;
 
 		default:
 			std::cout
@@ -174,6 +200,9 @@ int main(int argc,char** argv) {
 				<< "\t" << argv[0] << " 5\tStart async task with the deferred policy\n"
 				<< "\t" << argv[0] << " 6\tStart several async tasks and get their results\n"
 				<< "\t" << argv[0] << " 7\tSimple thread pool example\n"
+				<< "\t" << argv[0] << " 8\tStart several tasks in a big-enough thread pool\n"
+				<< "\t" << argv[0] << " 9\tStart more tasks than the size of the thread pool\n"
+
 				;
 			return EXIT_FAILURE;
 	}
