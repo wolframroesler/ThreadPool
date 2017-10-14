@@ -4,6 +4,7 @@
  * @date 2017-10-14
  */
 
+#include <future>
 #include <iostream>
 #include <mutex>
 #include <string>
@@ -27,11 +28,15 @@ void Say(const std::string& msg) {
  * Write a message to cout when we begin and finish.
  *
  * @param sec The number of seconds after which this function returns.
+ *
+ * @returns sec.
  */
-void DoSomething(int sec) {
+int DoSomething(int sec) {
 	Say("Sleeping for " + std::to_string(sec) + " s ...");
 	sleep(sec);
 	Say("Slept for " + std::to_string(sec) + " s");
+
+	return sec;
 }
 
 /**
@@ -61,9 +66,45 @@ void Demo2() {
 	}
 
 	// Wait for all threads to finish
-	for(auto &t : v) {
+	for(auto& t : v) {
 		t.join();
 	}
+}
+
+/**
+ * Demonstration 3: Simple std::async example
+ */
+void Demo3() {
+
+	// Start a task and run it in the background
+	auto f = std::async(DoSomething,2);
+
+	// Do something else while the background task is running
+	DoSomething(1);
+
+	// Wait for the background task to finish and get its result
+	const auto result = f.get();
+	Say("The result is " + std::to_string(result));
+}
+
+/**
+ * Demonstrations 4 and 5: Specify std::async launch policy
+ *
+ * @param defer Launch policy: false=async, true=deferred
+ */
+void Demo45(bool defer) {
+
+	// Start a task and run it in the background
+	auto f = defer
+		? std::async(std::launch::deferred,DoSomething,2)
+		: std::async(std::launch::async,   DoSomething,2);
+
+	// Do something else while the background task is running
+	DoSomething(1);
+
+	// Wait for the background task to finish and get its result
+	const auto result = f.get();
+	Say("The result is " + std::to_string(result));
 }
 
 /**
@@ -72,16 +113,22 @@ void Demo2() {
 int main(int argc,char** argv) {
 	switch(argc==2 ? atoi(argv[1]) : -1) {
 
-		case 1: Demo1(); break;
-		case 2: Demo2(); break;
+		case 1: Demo1();		break;
+		case 2: Demo2();		break;
+		case 3: Demo3();		break;
+		case 4: Demo45(false);	break;
+		case 5: Demo45(true);	break;
 
 		default:
-		  std::cout
-			<< "C++11 multithreading demonstration program\n"
-			<< "Usage:\n"
-			<< "\t" << argv[0] << " 1\tSimple std::thread example\n"
-			<< "\t" << argv[0] << " 2\tStart several threads and wait for all of them\n"
-			;
-		  return EXIT_FAILURE;
+			std::cout
+				<< "C++11 multithreading demonstration program\n"
+				<< "Usage:\n"
+				<< "\t" << argv[0] << " 1\tSimple std::thread example\n"
+				<< "\t" << argv[0] << " 2\tStart several threads and wait for all of them\n"
+				<< "\t" << argv[0] << " 3\tSimple std::async example\n"
+				<< "\t" << argv[0] << " 4\tStart async task with the async policy\n"
+				<< "\t" << argv[0] << " 5\tStart async task with the deferred policy\n"
+				;
+			return EXIT_FAILURE;
 	}
 }
