@@ -82,7 +82,7 @@ void Demo3() {
 	// Do something else while the background task is running
 	DoSomething(1);
 
-	// Wait for the background task to finish and get its result
+	// Wait for the background task to finish and show its result
 	const auto result = f.get();
 	Say("The result is " + std::to_string(result));
 }
@@ -102,9 +102,30 @@ void Demo45(bool defer) {
 	// Do something else while the background task is running
 	DoSomething(1);
 
-	// Wait for the background task to finish and get its result
+	// Wait for the background task to finish and show its result
 	const auto result = f.get();
 	Say("The result is " + std::to_string(result));
+}
+
+/**
+ * Demonstration 6: Start several async tasks and wait for them
+ */
+void Demo6() {
+
+	// Start a number of async tasks
+	std::vector<std::future<int>> v;
+	for(auto i=0,sec=1;i<3;++i,sec*=2) {
+		v.push_back(
+			std::async(std::launch::async,DoSomething,sec)
+		);
+	}
+
+	// Wait for all tasks to finish, and show their results
+	for(auto& f : v) {
+	  const auto result = f.get();
+	  Say("The result is " + std::to_string(result));
+	}
+
 }
 
 /**
@@ -118,6 +139,7 @@ int main(int argc,char** argv) {
 		case 3: Demo3();		break;
 		case 4: Demo45(false);	break;
 		case 5: Demo45(true);	break;
+		case 6: Demo6();		break;
 
 		default:
 			std::cout
@@ -128,6 +150,7 @@ int main(int argc,char** argv) {
 				<< "\t" << argv[0] << " 3\tSimple std::async example\n"
 				<< "\t" << argv[0] << " 4\tStart async task with the async policy\n"
 				<< "\t" << argv[0] << " 5\tStart async task with the deferred policy\n"
+				<< "\t" << argv[0] << " 6\tStart several async tasks and get their results\n"
 				;
 			return EXIT_FAILURE;
 	}
