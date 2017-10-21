@@ -4,12 +4,12 @@
  * @date 2017-10-14
  */
 
+#include <chrono>
 #include <future>
 #include <iostream>
 #include <mutex>
 #include <string>
 #include <thread>
-#include <unistd.h>
 #include <vector>
 
 #include "threadpool.h"
@@ -35,7 +35,7 @@ void Say(const std::string& msg) {
  */
 int DoSomething(int sec) {
 	Say("Sleeping for " + std::to_string(sec) + " s ...");
-	sleep(sec);
+	std::this_thread::sleep_for(std::chrono::seconds(sec));
 	Say("Slept for " + std::to_string(sec) + " s.");
 
 	return sec;
