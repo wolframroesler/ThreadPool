@@ -38,11 +38,14 @@
  */
 class ThreadPool {
 public:
-    ThreadPool(size_t threads = std::thread::hardware_concurrency());
+	// Ctor/dtor
+    explicit ThreadPool(size_t threads = std::thread::hardware_concurrency());
+    ~ThreadPool();
+
+	// Enqueue function
     template<class F, class... Args>
     auto operator()(F&& f, Args&&... args) 
         -> std::future<typename std::result_of<F(Args...)>::type>;
-    ~ThreadPool();
 
     // Obey the "rule of five"
     ThreadPool(const ThreadPool&) = delete;
