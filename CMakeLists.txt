@@ -4,4 +4,4 @@
 cmake_minimum_required (VERSION 3.8)
 set (CMAKE_CXX_STANDARD 14)
 project (threaddemo)
-add_executable (threaddemo main.cpp)
+add_executable (threaddemo threaddemo.cpp)
