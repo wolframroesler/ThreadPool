@@ -5,6 +5,7 @@
  */
 
 #include <atomic>
+#include <condition_variable>
 #include <chrono>
 #include <future>
 #include <iostream>
@@ -283,9 +284,68 @@ void Demo10() {
 }
 
 /**
- * Demonstration 11: Write to atomic vs. regular variables
+ * Demonstration 11: Synchronize threads with condition variables
+ *
+ * Things to keep in mind:
+ *
+ * - Condition variables synchronize access to a variable
+ *   shared by more than one thread
+ * - A mutex is used for synchronization of the shared variable
+ *   and the condition variable
+ * - wait() on a condition variable may return without reason
+ *   ("spurious wakeup") so always check if the condition you're
+ *   waiting for has actually occured
+ * - Condition variables work more than once
+ * - There can be more than one thread waiting on the same
+ *   condition variable, caller may signal them all (notify_all)
+ *   or only one of them (notify_one)
  */
 void Demo11() {
+
+	// Create a condition variable and a mutex
+	std::condition_variable cv;
+	std::mutex m;
+
+	// Flag that is written by one thread and read by another
+	// Note that access to this variable is protected by a
+	// mutex so it doesn't have to be atomic
+	bool go = false;
+
+	// Start a thread that waits for a notification before
+	// doing something
+	auto t = std::thread([&](){
+
+		// Wait until we receive a notification through the
+		// condition variable, then check the flag to handle
+		// spurious wakeups
+		std::unique_lock<std::mutex> lock(m);
+		cv.wait(lock,[&](){
+			return go;
+		});
+
+		// Received notification, go ahead
+		DoSomething(2);
+	});
+
+	// Do some work first
+	DoSomething(1);
+
+	// Now notify the thread, use the same mutex to protect
+	// access to the shared variable
+	{
+		std::lock_guard<std::mutex> _(m);
+		go = true;
+		cv.notify_all();
+	}
+
+	// Wait for the thread to finish
+	t.join();
+}
+
+/**
+ * Demonstration 12: Write to atomic vs. regular variables
+ */
+void Demo12() {
 
 	// Two variables, one regular int and one atomic int
 	int i = 0;
@@ -337,6 +397,7 @@ int main(int argc,char** argv) {
 		case 9:		Demo89(false);	break;
 		case 10:	Demo10();		break;
 		case 11:	Demo11();		break;
+		case 12:	Demo12();		break;
 
 		default:
 			std::cout
@@ -351,8 +412,9 @@ int main(int argc,char** argv) {
 				<< "\t" << argv[0] << " 7\tSimple thread pool example\n"
 				<< "\t" << argv[0] << " 8\tStart more tasks than the size of the thread pool\n"
 				<< "\t" << argv[0] << " 9\tStart several tasks in a big-enough thread pool\n"
-				<< "\t" << argv[0] << " 11\tCompare parallel writes to regular and atomic variables\n"
-
+				<< "\t" << argv[0] << " 10\tStart a thread suspended\n"
+				<< "\t" << argv[0] << " 11\tThread synchronization with condition variables\n"
+				<< "\t" << argv[0] << " 12\tCompare parallel writes to regular and atomic variables\n"
 				;
 			return EXIT_FAILURE;
 	}
