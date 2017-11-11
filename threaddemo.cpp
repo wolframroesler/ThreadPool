@@ -4,6 +4,7 @@
  * @date 2017-10-14
  */
 
+#include <atomic>
 #include <chrono>
 #include <future>
 #include <iostream>
@@ -247,20 +248,59 @@ void Demo89(bool toosmall) {
 }
 
 /**
+ * Demonstration 10: Write to atomic vs. regular variables
+ */
+void Demo10() {
+
+	// Two variables, one regular int and one atomic int
+	int i = 0;
+	std::atomic_int a(0);
+
+	// The number of threads we'll run
+	const auto nthreads = 1'000;
+
+	// The number of times we'll increment each variable
+	// in every thread
+	const auto nincrements = 100'000;
+
+	// So do it
+	std::vector<std::thread> v;
+	for(auto _=0;_<nthreads;++_) {
+		v.emplace_back([&](){
+
+		  // Here's what we do in each thread
+		  for(auto _=0;_<nincrements;++_) {
+		  	++i;
+			++a;
+		  }
+
+		});
+	}
+	for(auto& t : v) t.join();
+
+	// Show the results
+	std::cout
+		<< "Expected result:  " << nthreads * nincrements << "\n"
+		<< "Regular variable: " << i << "\n"
+		<< "Atomic variable:  " << a << "\n";
+}
+
+/**
  * Program starts here
  */
 int main(int argc,char** argv) {
 	switch(argc==2 ? atoi(argv[1]) : -1) {
 
-		case 1: Demo1();		break;
-		case 2: Demo2();		break;
-		case 3: Demo3();		break;
-		case 4: Demo45(true);	break;
-		case 5: Demo45(false);	break;
-		case 6: Demo6();		break;
-		case 7: Demo7();		break;
-		case 8: Demo89(true);	break;
-		case 9: Demo89(false);	break;
+		case 1:	 	Demo1();		break;
+		case 2:	 	Demo2();		break;
+		case 3:	 	Demo3();		break;
+		case 4:	 	Demo45(true);	break;
+		case 5:	 	Demo45(false);	break;
+		case 6:	 	Demo6();		break;
+		case 7: 	Demo7();		break;
+		case 8: 	Demo89(true);	break;
+		case 9:		Demo89(false);	break;
+		case 10:	Demo10();		break;
 
 		default:
 			std::cout
@@ -275,6 +315,7 @@ int main(int argc,char** argv) {
 				<< "\t" << argv[0] << " 7\tSimple thread pool example\n"
 				<< "\t" << argv[0] << " 8\tStart more tasks than the size of the thread pool\n"
 				<< "\t" << argv[0] << " 9\tStart several tasks in a big-enough thread pool\n"
+				<< "\t" << argv[0] << " 10\tCompare parallel writes to regular and atomic variables\n"
 
 				;
 			return EXIT_FAILURE;
