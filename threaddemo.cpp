@@ -17,11 +17,21 @@
 /**
  * Write msg to cout in a thread-safe way.
  *
- * @param msg The message to display. Need not be \n terminated.
+ * @param msg The message to display. Must not be \n terminated.
+ *
+ * Things to keep in mind:
+ *
+ * - Use a mutex object that is shared by all threads.
+ * - Use a lock_guard object in every thread.
+ * - The lock_guard ctor blocks while the mutex is locked
+ *   by another thread.
+ * - The lock_guard dtor releases the lock. No need to
+ *   unlock manually (and can't forget to unlock).
  */
 void Say(const std::string& msg) {
 	static std::mutex m;
 	std::lock_guard<std::mutex> _(m);
+
 	std::cout << msg << std::endl;
 }
 
@@ -34,10 +44,16 @@ void Say(const std::string& msg) {
  * @returns sec.
  */
 int DoSomething(int sec) {
+	// Show start message
 	Say("Sleeping for " + std::to_string(sec) + " s ...");
+
+	// Sleep
 	std::this_thread::sleep_for(std::chrono::seconds(sec));
+
+	// Show end message
 	Say("Slept for " + std::to_string(sec) + " s.");
 
+	// Return the sleep time
 	return sec;
 }
 
@@ -78,7 +94,7 @@ void Demo2() {
 
 	// Start a number of threads
 	std::vector<std::thread> v;
-	for(auto i=0,sec=1;i<3;++i,sec*=2) {
+	for(auto _=0,sec=1;_<3;++_,sec*=2) {
 		v.emplace_back(DoSomething,sec);
 	}
 
@@ -129,8 +145,8 @@ void Demo45(bool defer) {
 
 	// Start a task and run it in the background
 	auto f = defer
-		? std::async(std::launch::deferred,DoSomething,2)
-		: std::async(std::launch::async,   DoSomething,2);
+		? std::async(std::launch::deferred,DoSomething,2)	// Demo 4
+		: std::async(std::launch::async,   DoSomething,2);	// Demo 5
 
 	// Do something else while the background task is running
 	DoSomething(1);
@@ -147,8 +163,8 @@ void Demo6() {
 
 	// Start a number of async tasks
 	std::vector<std::future<int>> v;
-	for(auto i=0,sec=1;i<3;++i,sec*=2) {
-		v.push_back(
+	for(auto _=0,sec=1;_<3;++_,sec*=2) {
+		v.emplace_back(
 			std::async(std::launch::async,DoSomething,sec)
 		);
 	}
@@ -210,11 +226,14 @@ void Demo7() {
 void Demo89(bool toosmall) {
 
 	// Create a pool with either enough or too few parallel threads
-	ThreadPool p(toosmall ? 2 : 4);
+	ThreadPool p(toosmall
+		? 2						// Demo 8
+		: 4						// Demo 9
+	);
 
 	// Start a number of tasks in the pool
 	std::vector<std::future<int>> v;
-	for(auto i=0,sec=1;i<3;++i,sec*=2) {
+	for(auto _=0,sec=1;_<3;++_,sec*=2) {
 		v.push_back(
 			p(DoSomething,sec)
 		);
@@ -236,12 +255,12 @@ int main(int argc,char** argv) {
 		case 1: Demo1();		break;
 		case 2: Demo2();		break;
 		case 3: Demo3();		break;
-		case 4: Demo45(false);	break;
-		case 5: Demo45(true);	break;
+		case 4: Demo45(true);	break;
+		case 5: Demo45(false);	break;
 		case 6: Demo6();		break;
 		case 7: Demo7();		break;
-		case 8: Demo89(false);	break;
-		case 9: Demo89(true);	break;
+		case 8: Demo89(true);	break;
+		case 9: Demo89(false);	break;
 
 		default:
 			std::cout
@@ -250,12 +269,12 @@ int main(int argc,char** argv) {
 				<< "\t" << argv[0] << " 1\tSimple std::thread example\n"
 				<< "\t" << argv[0] << " 2\tStart several threads and wait for all of them\n"
 				<< "\t" << argv[0] << " 3\tSimple std::async example\n"
-				<< "\t" << argv[0] << " 4\tStart async task with the async policy\n"
-				<< "\t" << argv[0] << " 5\tStart async task with the deferred policy\n"
+				<< "\t" << argv[0] << " 4\tStart async task with the deferred policy\n"
+				<< "\t" << argv[0] << " 5\tStart async task with the async policy\n"
 				<< "\t" << argv[0] << " 6\tStart several async tasks and get their results\n"
 				<< "\t" << argv[0] << " 7\tSimple thread pool example\n"
-				<< "\t" << argv[0] << " 8\tStart several tasks in a big-enough thread pool\n"
-				<< "\t" << argv[0] << " 9\tStart more tasks than the size of the thread pool\n"
+				<< "\t" << argv[0] << " 8\tStart more tasks than the size of the thread pool\n"
+				<< "\t" << argv[0] << " 9\tStart several tasks in a big-enough thread pool\n"
 
 				;
 			return EXIT_FAILURE;
