@@ -248,9 +248,44 @@ void Demo89(bool toosmall) {
 }
 
 /**
- * Demonstration 10: Write to atomic vs. regular variables
+ * Demonstration 10: How to start a thread suspended
+ *
+ * Things to keep in mind:
+ *
+ * - void is a legal data type for a future
+ * - future::wait waits but doesn't return the future's result/exception
+ * - A future works only once
  */
 void Demo10() {
+
+	// We'll use this to release our thread
+	std::promise<void> p;
+
+	// Now run a suspended thread (won't start until we
+	// tell it it)
+	auto t = std::thread([&p](){
+
+		// Suspend the thread until the caller releases it
+		p.get_future().wait();
+
+		// Now the thread becomes active
+		DoSomething(2);
+	});
+
+	// Do something before allowing the thread to run
+	DoSomething(1);
+
+	// Now let the thread run
+	p.set_value();
+
+	// Wait for the thread to finish
+	t.join();
+}
+
+/**
+ * Demonstration 11: Write to atomic vs. regular variables
+ */
+void Demo11() {
 
 	// Two variables, one regular int and one atomic int
 	int i = 0;
@@ -301,6 +336,7 @@ int main(int argc,char** argv) {
 		case 8: 	Demo89(true);	break;
 		case 9:		Demo89(false);	break;
 		case 10:	Demo10();		break;
+		case 11:	Demo11();		break;
 
 		default:
 			std::cout
@@ -315,7 +351,7 @@ int main(int argc,char** argv) {
 				<< "\t" << argv[0] << " 7\tSimple thread pool example\n"
 				<< "\t" << argv[0] << " 8\tStart more tasks than the size of the thread pool\n"
 				<< "\t" << argv[0] << " 9\tStart several tasks in a big-enough thread pool\n"
-				<< "\t" << argv[0] << " 10\tCompare parallel writes to regular and atomic variables\n"
+				<< "\t" << argv[0] << " 11\tCompare parallel writes to regular and atomic variables\n"
 
 				;
 			return EXIT_FAILURE;
