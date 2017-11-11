@@ -43,6 +43,15 @@ int DoSomething(int sec) {
 
 /**
  * Demonstration 1: Simple std::thread example
+ *
+ * Things to keep in mind:
+ *
+ * - The std::thread ctor will perfect-forward parameters to
+ *   the thread function.
+ * - When using a lambda, be careful with capture-by-reference.
+ * - Must call either join or detach on the thread object
+ *   (exactly one of them, exactly once). If you don't, the
+ *   std::thread dtor will will abort() your program.
  */
 void Demo1() {
 
@@ -58,6 +67,12 @@ void Demo1() {
 
 /**
  * Demonstration 2: Start several threads and wait for all of them
+ *
+ * Things to keep in mind:
+ *
+ * - Can store threads in regular containers, no need for a
+ *   dedicated thread group class.
+ * - Use emplace_back to perfect-forward to prevent copying.
  */
 void Demo2() {
 
@@ -75,6 +90,14 @@ void Demo2() {
 
 /**
  * Demonstration 3: Simple std::async example
+ *
+ * Things to keep in mind:
+ *
+ * - With async we call it "task", not "thread".
+ * - Call get to retrieve the task function's return value.
+ * - If the task function throws, get will throw.
+ * - Looks nice and clean but in reality you'll really want
+ *   to specify the launch policy.
  */
 void Demo3() {
 
@@ -93,6 +116,14 @@ void Demo3() {
  * Demonstrations 4 and 5: Specify std::async launch policy
  *
  * @param defer Launch policy: false=async, true=deferred
+ *
+ * Things to keep in mind:
+ *
+ * - deferred = run task function when get is called.
+ * - async = run task function in the background now.
+ * - none of them = deferred|async. In theory, runtime lib
+ *   picks the optimal way to run your task. In practice,
+ *   runtime lib may choose to defer all the time.
  */
 void Demo45(bool defer) {
 
@@ -131,6 +162,20 @@ void Demo6() {
 
 /**
  * Demonstration 7: Simple thread pool example
+ *
+ * Things to keep in mind:
+ *
+ * - Thread pool pre-allocates a number of threads to reduce
+ *   thread-creation overhead. You may want to keep your
+ *   thread pool object around, no need to delete and re-create
+ *   it every time.
+ * - Use operator() to add a new task to the pool.
+ * - A thread pool has a certain number of threads. Tasks can
+ *   be added to the pool any time, even when all threads are
+ *   busy (the thread pool will never refuse new tasks because
+ *   it is "full"). When all threads are busy, new tasks wait
+ *   until a thread becomes available.
+ * - Tasks can return values and exceptions just like std::async.
  */
 void Demo7() {
 
@@ -152,6 +197,15 @@ void Demo7() {
  * Demonstrations 8 and 9: Start several tasks with a thread pool
  *
  * @param toosmall If true, make the pool smaller than the number of tasks
+ *
+ * Things to keep in mind:
+ *
+ * - Specify the number of threads when creating the thread pool.
+ * - The right number of threads depends on your requirements to
+ *   choose wisely.
+ * - The default may or may not suit your needs.
+ * - It's not the thread pool's job to keep you from overloading
+ *   your machine.
  */
 void Demo89(bool toosmall) {
 
