@@ -31,10 +31,10 @@
  *   unlock manually (and can't forget to unlock).
  */
 void Say(const std::string& msg) {
-	static std::mutex m;
-	std::lock_guard<std::mutex> _(m);
+    static std::mutex m;
+    std::lock_guard<std::mutex> _(m);
 
-	std::cout << msg << std::endl;
+    std::cout << msg << std::endl;
 }
 
 /**
@@ -46,17 +46,17 @@ void Say(const std::string& msg) {
  * @returns sec.
  */
 int DoSomething(int sec) {
-	// Show start message
-	Say("Sleeping for " + std::to_string(sec) + " s ...");
+    // Show start message
+    Say("Sleeping for " + std::to_string(sec) + " s ...");
 
-	// Sleep
-	std::this_thread::sleep_for(std::chrono::seconds(sec));
+    // Sleep
+    std::this_thread::sleep_for(std::chrono::seconds(sec));
 
-	// Show end message
-	Say("Slept for " + std::to_string(sec) + " s.");
+    // Show end message
+    Say("Slept for " + std::to_string(sec) + " s.");
 
-	// Return the sleep time
-	return sec;
+    // Return the sleep time
+    return sec;
 }
 
 /**
@@ -67,20 +67,21 @@ int DoSomething(int sec) {
  * - The std::thread ctor will perfect-forward parameters to
  *   the thread function.
  * - When using a lambda, be careful with capture-by-reference.
+ * - If the thread function throws, the program terminates.
  * - Must call either join or detach on the thread object
  *   (exactly one of them, exactly once). If you don't, the
  *   std::thread dtor will will abort() your program.
  */
 void Demo1() {
 
-	// Start a thread and run it in the background
-	auto t = std::thread(DoSomething,2);
+    // Start a thread and run it in the background
+    auto t = std::thread(DoSomething,2);
 
-	// Do something else while the background thread is running
-	DoSomething(1);
+    // Do something else while the background thread is running
+    DoSomething(1);
 
-	// Wait for the background thread to finish
-	t.join();
+    // Wait for the background thread to finish
+    t.join();
 }
 
 /**
@@ -94,16 +95,16 @@ void Demo1() {
  */
 void Demo2() {
 
-	// Start a number of threads
-	std::vector<std::thread> v;
-	for(auto _=0,sec=1;_<3;++_,sec*=2) {
-		v.emplace_back(DoSomething,sec);
-	}
+    // Start a number of threads
+    std::vector<std::thread> v;
+    for(auto _=0,sec=1;_<3;++_,sec*=2) {
+        v.emplace_back(DoSomething,sec);
+    }
 
-	// Wait for all threads to finish
-	for(auto& t : v) {
-		t.join();
-	}
+    // Wait for all threads to finish
+    for(auto& t : v) {
+        t.join();
+    }
 }
 
 /**
@@ -119,15 +120,15 @@ void Demo2() {
  */
 void Demo3() {
 
-	// Start a task and run it in the background
-	auto f = std::async(DoSomething,2);
+    // Start a task and run it in the background
+    auto f = std::async(DoSomething,2);
 
-	// Do something else while the background task is running
-	DoSomething(1);
+    // Do something else while the background task is running
+    DoSomething(1);
 
-	// Wait for the background task to finish and show its result
-	const auto result = f.get();
-	Say("The result is " + std::to_string(result) + ".");
+    // Wait for the background task to finish and show its result
+    const auto result = f.get();
+    Say("The result is " + std::to_string(result) + ".");
 }
 
 /**
@@ -145,17 +146,17 @@ void Demo3() {
  */
 void Demo45(bool defer) {
 
-	// Start a task and run it in the background
-	auto f = defer
-		? std::async(std::launch::deferred,DoSomething,2)	// Demo 4
-		: std::async(std::launch::async,   DoSomething,2);	// Demo 5
+    // Start a task and run it in the background
+    auto f = defer
+        ? std::async(std::launch::deferred,DoSomething,2)   // Demo 4
+        : std::async(std::launch::async,   DoSomething,2);  // Demo 5
 
-	// Do something else while the background task is running
-	DoSomething(1);
+    // Do something else while the background task is running
+    DoSomething(1);
 
-	// Wait for the background task to finish and show its result
-	const auto result = f.get();
-	Say("The result is " + std::to_string(result) + ".");
+    // Wait for the background task to finish and show its result
+    const auto result = f.get();
+    Say("The result is " + std::to_string(result) + ".");
 }
 
 /**
@@ -163,19 +164,19 @@ void Demo45(bool defer) {
  */
 void Demo6() {
 
-	// Start a number of async tasks
-	std::vector<std::future<int>> v;
-	for(auto _=0,sec=1;_<3;++_,sec*=2) {
-		v.emplace_back(
-			std::async(std::launch::async,DoSomething,sec)
-		);
-	}
+    // Start a number of async tasks
+    std::vector<std::future<int>> v;
+    for(auto _=0,sec=1;_<3;++_,sec*=2) {
+        v.emplace_back(
+            std::async(std::launch::async,DoSomething,sec)
+        );
+    }
 
-	// Wait for all tasks to finish, and show their results
-	for(auto& f : v) {
-	  const auto result = f.get();
-	  Say("The result is " + std::to_string(result) + ".");
-	}
+    // Wait for all tasks to finish, and show their results
+    for(auto& f : v) {
+      const auto result = f.get();
+      Say("The result is " + std::to_string(result) + ".");
+    }
 }
 
 /**
@@ -197,18 +198,18 @@ void Demo6() {
  */
 void Demo7() {
 
-	// Create a thread pool
-	ThreadPool p;
+    // Create a thread pool
+    ThreadPool p;
 
-	// Start a task in the pool
-	auto f = p(DoSomething,2);
+    // Start a task in the pool
+    auto f = p(DoSomething,2);
 
-	// Do something else while the background task is running
-	DoSomething(1);
+    // Do something else while the background task is running
+    DoSomething(1);
 
-	// Wait for the task to finish and show its result
-	const auto result = f.get();
-	Say("The result is " + std::to_string(result) + ".");
+    // Wait for the task to finish and show its result
+    const auto result = f.get();
+    Say("The result is " + std::to_string(result) + ".");
 }
 
 /**
@@ -221,31 +222,31 @@ void Demo7() {
  * - Specify the number of threads when creating the thread pool.
  * - The right number of threads depends on your requirements to
  *   choose wisely.
- * - The default may or may not suit your needs.
+ * - The default (number of CPUs) may or may not suit your needs.
  * - It's not the thread pool's job to keep you from overloading
  *   your machine.
  */
 void Demo89(bool toosmall) {
 
-	// Create a pool with either enough or too few parallel threads
-	ThreadPool p(toosmall
-		? 2						// Demo 8
-		: 4						// Demo 9
-	);
+    // Create a pool with either enough or too few parallel threads
+    ThreadPool p(toosmall
+        ? 2                     // Demo 8
+        : 4                     // Demo 9
+    );
 
-	// Start a number of tasks in the pool
-	std::vector<std::future<int>> v;
-	for(auto _=0,sec=1;_<3;++_,sec*=2) {
-		v.push_back(
-			p(DoSomething,sec)
-		);
-	}
+    // Start a number of tasks in the pool
+    std::vector<std::future<int>> v;
+    for(auto _=0,sec=1;_<3;++_,sec*=2) {
+        v.push_back(
+            p(DoSomething,sec)
+        );
+    }
 
-	// Wait for all tasks to finish, and show their results
-	for(auto& f : v) {
-	  const auto result = f.get();
-	  Say("The result is " + std::to_string(result) + ".");
-	}
+    // Wait for all tasks to finish, and show their results
+    for(auto& f : v) {
+      const auto result = f.get();
+      Say("The result is " + std::to_string(result) + ".");
+    }
 }
 
 /**
@@ -253,34 +254,36 @@ void Demo89(bool toosmall) {
  *
  * Things to keep in mind:
  *
- * - void is a legal data type for a future
+ * - promise and future are the two ends of a one-way, one-shot
+ *   communications channel
+ * - void is a legal data type for a promise/future
  * - future::wait waits but doesn't return the future's result/exception
  * - A future works only once
  */
 void Demo10() {
 
-	// We'll use this to release our thread
-	std::promise<void> p;
+    // We'll use this to release our thread
+    std::promise<void> p;
 
-	// Now run a suspended thread (won't start until we
-	// tell it it)
-	auto t = std::thread([&p](){
+    // Now run a suspended thread (won't start until we
+    // tell it it)
+    auto t = std::thread([&p](){
 
-		// Suspend the thread until the caller releases it
-		p.get_future().wait();
+        // Suspend the thread until the caller releases it
+        p.get_future().wait();
 
-		// Now the thread becomes active
-		DoSomething(2);
-	});
+        // Now the thread becomes active
+        DoSomething(2);
+    });
 
-	// Do something before allowing the thread to run
-	DoSomething(1);
+    // Do something before allowing the thread to run
+    DoSomething(1);
 
-	// Now let the thread run
-	p.set_value();
+    // Now let the thread run
+    p.set_value();
 
-	// Wait for the thread to finish
-	t.join();
+    // Wait for the thread to finish
+    t.join();
 }
 
 /**
@@ -295,127 +298,135 @@ void Demo10() {
  * - wait() on a condition variable may return without reason
  *   ("spurious wakeup") so always check if the condition you're
  *   waiting for has actually occured
- * - Condition variables work more than once
+ * - Unlike promise/future, condition variables work more than once
  * - There can be more than one thread waiting on the same
- *   condition variable, caller may signal them all (notify_all)
+ *   condition variable, caller may notify them all (notify_all)
  *   or only one of them (notify_one)
  */
 void Demo11() {
 
-	// Create a condition variable and a mutex
-	std::condition_variable cv;
-	std::mutex m;
+    // Create a condition variable and a mutex
+    std::condition_variable cv;
+    std::mutex m;
 
-	// Flag that is written by one thread and read by another
-	// Note that access to this variable is protected by a
-	// mutex so it doesn't have to be atomic
-	bool go = false;
+    // Flag that is written by one thread and read by another
+    // Note that access to this variable is protected by a
+    // mutex so it doesn't have to be atomic
+    bool go = false;
 
-	// Start a thread that waits for a notification before
-	// doing something
-	auto t = std::thread([&](){
+    // Start a thread that waits for a notification before
+    // doing something
+    auto t = std::thread([&](){
 
-		// Wait until we receive a notification through the
-		// condition variable, then check the flag to handle
-		// spurious wakeups
-		std::unique_lock<std::mutex> lock(m);
-		cv.wait(lock,[&](){
-			return go;
-		});
+        // Wait until we receive a notification through the
+        // condition variable, then check the flag to handle
+        // spurious wakeups
+        std::unique_lock<std::mutex> lock(m);
+        cv.wait(lock,[&](){
+            return go;
+        });
 
-		// Received notification, go ahead
-		DoSomething(2);
-	});
+        // Received notification, go ahead
+        DoSomething(2);
+    });
 
-	// Do some work first
-	DoSomething(1);
+    // Do some work first
+    DoSomething(1);
 
-	// Now notify the thread, use the same mutex to protect
-	// access to the shared variable
-	{
-		std::lock_guard<std::mutex> _(m);
-		go = true;
-		cv.notify_all();
-	}
+    // Now notify the thread, use the same mutex to protect
+    // access to the shared variable
+    {
+        std::lock_guard<std::mutex> _(m);
+        go = true;
+        cv.notify_all();
+    }
 
-	// Wait for the thread to finish
-	t.join();
+    // Wait for the thread to finish
+    t.join();
 }
 
 /**
  * Demonstration 12: Write to atomic vs. regular variables
+ *
+ * Things to keep in mind:
+ *
+ * - std::atomic<T> is like a T with synchronized access
+ * - std::atomic_int is short for std::atomic<int>, same
+ *   for char, bool, long, etc.
+ * - std::atomic_flag is like atomic_bool but guaranteed
+ *   to be lock-free
  */
 void Demo12() {
 
-	// Two variables, one regular int and one atomic int
-	int i = 0;
-	std::atomic_int a(0);
+    // Two variables, one regular int and one atomic int
+    int i = 0;
+    std::atomic_int a(0);
 
-	// The number of threads we'll run
-	const auto nthreads = 1'000;
+    // The number of threads we'll run
+    const auto nthreads = 1'000;
 
-	// The number of times we'll increment each variable
-	// in every thread
-	const auto nincrements = 100'000;
+    // The number of times we'll increment each variable
+    // in every thread
+    const auto nincrements = 100'000;
 
-	// So do it
-	std::vector<std::thread> v;
-	for(auto _=0;_<nthreads;++_) {
-		v.emplace_back([&](){
+    // So do it
+    std::vector<std::thread> v;
+    for(auto _=0;_<nthreads;++_) {
+        v.emplace_back([&](){
 
-		  // Here's what we do in each thread
-		  for(auto _=0;_<nincrements;++_) {
-		  	++i;
-			++a;
-		  }
+          // Here's what we do in each thread
+          for(auto _=0;_<nincrements;++_) {
+            ++i;
+            ++a;
+          }
 
-		});
-	}
-	for(auto& t : v) t.join();
+        });
+    }
+    for(auto& t : v) t.join();
 
-	// Show the results
-	std::cout
-		<< "Expected result:  " << nthreads * nincrements << "\n"
-		<< "Regular variable: " << i << "\n"
-		<< "Atomic variable:  " << a << "\n";
+    // Show the results
+    std::cout
+        << "Expected result:  " << nthreads * nincrements << "\n"
+        << "Regular variable: " << i << "\n"
+        << "Atomic variable:  " << a << "\n";
 }
 
 /**
  * Program starts here
  */
 int main(int argc,char** argv) {
-	switch(argc==2 ? atoi(argv[1]) : -1) {
+    switch(argc==2 ? atoi(argv[1]) : -1) {
 
-		case 1:	 	Demo1();		break;
-		case 2:	 	Demo2();		break;
-		case 3:	 	Demo3();		break;
-		case 4:	 	Demo45(true);	break;
-		case 5:	 	Demo45(false);	break;
-		case 6:	 	Demo6();		break;
-		case 7: 	Demo7();		break;
-		case 8: 	Demo89(true);	break;
-		case 9:		Demo89(false);	break;
-		case 10:	Demo10();		break;
-		case 11:	Demo11();		break;
-		case 12:	Demo12();		break;
+        case 1:     Demo1();        break;
+        case 2:     Demo2();        break;
+        case 3:     Demo3();        break;
+        case 4:     Demo45(true);   break;
+        case 5:     Demo45(false);  break;
+        case 6:     Demo6();        break;
+        case 7:     Demo7();        break;
+        case 8:     Demo89(true);   break;
+        case 9:     Demo89(false);  break;
+        case 10:    Demo10();       break;
+        case 11:    Demo11();       break;
+        case 12:    Demo12();       break;
 
-		default:
-			std::cout
-				<< "C++11 multithreading demonstration program\n"
-				<< "Usage:\n"
-				<< "\t" << argv[0] << " 1\tSimple std::thread example\n"
-				<< "\t" << argv[0] << " 2\tStart several threads and wait for all of them\n"
-				<< "\t" << argv[0] << " 3\tSimple std::async example\n"
-				<< "\t" << argv[0] << " 4\tStart async task with the deferred policy\n"
-				<< "\t" << argv[0] << " 5\tStart async task with the async policy\n"
-				<< "\t" << argv[0] << " 6\tStart several async tasks and get their results\n"
-				<< "\t" << argv[0] << " 7\tSimple thread pool example\n"
-				<< "\t" << argv[0] << " 8\tStart more tasks than the size of the thread pool\n"
-				<< "\t" << argv[0] << " 9\tStart several tasks in a big-enough thread pool\n"
-				<< "\t" << argv[0] << " 10\tStart a thread suspended\n"
-				<< "\t" << argv[0] << " 11\tThread synchronization with condition variables\n"
-				<< "\t" << argv[0] << " 12\tCompare parallel writes to regular and atomic variables\n"
-				;
-			return EXIT_FAILURE;
-	}
+        default:
+            std::cout
+                << "C++11 multithreading demonstration program\n"
+                << "Usage:\n"
+                << "\t" << argv[0] << " 1\tSimple std::thread example\n"
+                << "\t" << argv[0] << " 2\tStart several threads and wait for all of them\n"
+                << "\t" << argv[0] << " 3\tSimple std::async example\n"
+                << "\t" << argv[0] << " 4\tStart async task with the deferred policy\n"
+                << "\t" << argv[0] << " 5\tStart async task with the async policy\n"
+                << "\t" << argv[0] << " 6\tStart several async tasks and get their results\n"
+                << "\t" << argv[0] << " 7\tSimple thread pool example\n"
+                << "\t" << argv[0] << " 8\tStart more tasks than the size of the thread pool\n"
+                << "\t" << argv[0] << " 9\tStart several tasks in a big-enough thread pool\n"
+                << "\t" << argv[0] << " 10\tStart a thread suspended\n"
+                << "\t" << argv[0] << " 11\tThread synchronization with condition variables\n"
+                << "\t" << argv[0] << " 12\tCompare parallel writes to regular and atomic variables\n"
+                ;
+            return EXIT_FAILURE;
+    }
 }
