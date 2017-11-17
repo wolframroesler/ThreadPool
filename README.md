@@ -90,3 +90,6 @@ http://www.acodersjourney.com/2017/08/top-20-cplusplus-multithreading-mistakes/
 
 Introduction to lockless programming
 https://assets.bitbashing.io/papers/lockless.pdf
+
+---
+*Wolfram Rösler • wolfram@roesler-ac.de • https://github.com/wolframroesler • https://twitter.com/wolframroesler • https://www.linkedin.com/in/wolframroesler/*
